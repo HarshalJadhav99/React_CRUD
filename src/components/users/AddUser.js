@@ -21,9 +21,7 @@ const AddUser = () => {
         // navigate('/')
         setStatus(true)
 	};
-    if(status){
-        return <AddUser/>
-    }
+   
 	return (
 		<>
 			<section>

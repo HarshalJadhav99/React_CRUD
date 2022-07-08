@@ -29,7 +29,7 @@ const EditUser = () => {
 	return (
 		<>
 			<section>
-				<div className="container">
+				<div className="container my-5">
 					<div className="row shadow p-4">
                     <h2>Edit A User</h2>
 						<form onSubmit={(e) => onSubmit(e)}>

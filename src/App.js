@@ -10,14 +10,14 @@ import User from "./components/users/User";
 
 function App() {
 	return (
-		<div className="App">
+		<div>
 			<Router>
+					
 				<Routes>
 					<Route exact path="/" element={<Home />} />
 					<Route exact path="/users/edit/:id" element={<EditUser />} />
 					<Route exact path="/users/:id" element={<User />} />
 				</Routes>
-				
 			</Router>
 		</div>
 	);
