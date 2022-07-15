@@ -13,6 +13,10 @@ import { faCoffee } from "@fortawesome/free-solid-svg-icons";
 const Home = () => {
 	const [users, setUser] = useState([]);
 	const [value, setValue] = useState("");
+	const [currentPage, setCurrentPage] = useState(0);
+	const [pageLimit] = useState(4);
+	const [sortValue, setSortValue] = useState("");
+	const [operation, setOperation] = useState("");
 
 	// AddUsers
 	const [user, setUsers] = useState({
@@ -34,29 +38,51 @@ const Home = () => {
 	const [order, setOrder] = useState("ASC");
 
 	useEffect(() => {
-		loadUsers();
+		loadUsers(0, 4, 0);
 	}, []);
-	const loadUsers = async () => {
-		const result = await axios.get("http://localhost:3003/users");
-		setUser(result.data);
+	const loadUsers = async (start, end, increas, optType = null, sortValue) => {
+		switch (optType) {
+			case "search":
+				setOperation(optType);
+				setUser("");
+				return await axios
+					.get(
+						`http://localhost:3003/users?q=${value}&_start=${start}&_end=${end}`
+					)
+					.then((response) => {
+						setUser(response.data);
+						setCurrentPage(currentPage + increas);
+					})
+					.catch((err) => console.log(err));
+			default:
+				const result = await axios.get(
+					`http://localhost:3003/users?_start=${start}&_end=${end}`
+				);
+				setUser(result.data);
+				setCurrentPage(currentPage + increas);
+		}
 	};
+
 	const deleteUser = async (id) => {
 		await axios.delete(`http://localhost:3003/users/${id}`);
 		loadUsers();
 	};
 	// Search Users
 	const handleReset = () => {
-		loadUsers();
+		setOperation("");
+		setValue("");
+		loadUsers(0, 4, 0);
 	};
 	const handleSearch = async (e) => {
 		e.preventDefault();
-		return await axios
-			.get(`http://localhost:3003/users?q=${value}`)
-			.then((response) => {
-				setUser(response.data);
-				setValue("");
-			})
-			.catch((err) => console.log(err));
+		loadUsers(0, 4, 0, "search");
+		// return await axios
+		// 	.get(`http://localhost:3003/users?q=${value}`)
+		// 	.then((response) => {
+		// 		setUser(response.data);
+		// 		setValue("");
+		// 	})
+		// 	.catch((err) => console.log(err));
 	};
 	// Sorting
 
@@ -79,12 +105,71 @@ const Home = () => {
 	if (status) {
 		return <Home />;
 	}
+	const renderPagination = () => {
+		if (users.length < 4 && currentPage === 0) return null;
+		if (currentPage === 0) {
+			return (
+				<nav className="d-flex justify-content-center">
+					<ul className="pagination">
+						<li className="page-link">1</li>
+						<li
+							className="page-link btn"
+							onClick={() => loadUsers(4, 8, 1, operation)}>
+							Next
+						</li>
+					</ul>
+				</nav>
+			);
+		} else if (currentPage < pageLimit - 1 && users.length === pageLimit) {
+			return (
+				<nav className="d-flex justify-content-center">
+					<ul className="pagination">
+						<li
+							className="page-link btn"
+							onClick={() =>
+								loadUsers((currentPage - 1) * 4, currentPage * 4, -1, operation)
+							}>
+							Prev
+						</li>
+						<li className="page-link">{currentPage + 1}</li>
+						<li
+							className="page-link btn"
+							onClick={() =>
+								loadUsers(
+									(currentPage + 1) * 4,
+									(currentPage + 2) * 4,
+									1,
+									operation
+								)
+							}>
+							Next
+						</li>
+					</ul>
+				</nav>
+			);
+		} else {
+			return (
+				<nav className="d-flex justify-content-center">
+					<ul className="pagination">
+						<li
+							className="page-link btn"
+							onClick={() =>
+								loadUsers((currentPage - 1) * 4, currentPage * 4, -1, operation)
+							}>
+							Prev
+						</li>
+						<li className="page-link">{currentPage + 1}</li>
+					</ul>
+				</nav>
+			);
+		}
+	};
 	return (
 		<>
 			<section className="mb-4">
 				<nav className="navbar navbar-expand-lg bg-light">
 					<div className="container-fluid">
-						<Link className="navbar-brand" to='/'>
+						<Link className="navbar-brand" to="/">
 							CRUD
 						</Link>
 						<button
@@ -154,7 +239,7 @@ const Home = () => {
 								))}
 							</select>
 						</div> */}
-						<Scrollbars style={{ height: "400px" }}>
+						
 							<table class="table table-hover border shadow">
 								<thead className="table-dark table-header-custom">
 									<tr>
@@ -226,7 +311,8 @@ const Home = () => {
 									)}
 								</tbody>
 							</table>
-						</Scrollbars>
+						
+						<div>{renderPagination()}</div>
 					</div>
 				</div>
 			</section>
